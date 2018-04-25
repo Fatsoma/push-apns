@@ -1,10 +1,11 @@
 module Push
   module Apns
     class BinaryNotificationValidator < ActiveModel::Validator
+      MAX_PAYLOAD_SIZE = 2048
 
       def validate(record)
-        if record.payload_size > 256
-          record.errors[:base] << "APN notification cannot be larger than 256 bytes. Try condensing your alert and device attributes."
+        if record.payload_size > MAX_PAYLOAD_SIZE
+          record.errors[:base] << "APN notification cannot be larger than #{MAX_PAYLOAD_SIZE} bytes. Try condensing your alert and device attributes."
         end
 
         if [5, 10].include?(record.priority) == false
@@ -12,7 +13,6 @@ module Push
         end
 
         if record.alert.nil? &&
-           record.badge.nil? &&
            record.sound.nil? &&
            record.content_available.present? &&
            record.priority == 10
