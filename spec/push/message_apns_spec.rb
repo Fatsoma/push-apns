@@ -10,8 +10,8 @@ describe Push::MessageApns do
   end
   let(:sound) { 'default' }
   let(:alert) { 'We have a new push notification for you' }
-  let(:content_available) { 1 }
-  let(:priority) { 10 }
+  let(:content_available) { nil }
+  let(:default_priority) { 10 }
   let(:notification_options) do
     {
       app: app,
@@ -21,8 +21,7 @@ describe Push::MessageApns do
       attributes_for_device: attributes_for_device,
       sound: sound,
       alert: alert,
-      content_available: content_available,
-      priority: priority
+      content_available: content_available
     }
   end
   let(:instance) { Push::MessageApns.create(notification_options) }
@@ -33,7 +32,7 @@ describe Push::MessageApns do
   end
 
   describe '#alert' do
-  subject { instance.alert }
+    subject { instance.alert }
     it { should == alert }
   end
 
@@ -64,7 +63,7 @@ describe Push::MessageApns do
 
   describe '#priority' do
     subject { instance.priority }
-    it { should == priority }
+    it { should == default_priority }
   end
 
   describe '#attributes_for_device' do
@@ -78,8 +77,7 @@ describe Push::MessageApns do
         'aps' => {
           'alert' => alert,
           'badge' => badge,
-          'sound' => sound,
-          'content-available' => content_available
+          'sound' => sound
         },
         'test' => '1'
       }))
@@ -94,7 +92,7 @@ describe Push::MessageApns do
 
    it 'should create a message with correct frame length' do
      _1, length, _2 = instance.to_message.unpack('cNa*')
-     expect(length).to eq(176)
+     expect(length).to eq(154)
    end
 
    def items
@@ -117,7 +115,7 @@ describe Push::MessageApns do
    end
 
    it 'should include item #2 with the payload as JSON' do
-     expect(items).to include([2, 120, '{"aps":{"alert":"We have a new push notification for you","badge":1,"sound":"default","content-available":1},"test":"1"}'])
+     expect(items).to include([2, 98, '{"aps":{"alert":"We have a new push notification for you","badge":1,"sound":"default"},"test":"1"}'])
    end
 
    it 'should include item #3 with the identifier' do
@@ -129,7 +127,17 @@ describe Push::MessageApns do
    end
 
    it 'should include item #5 with the priority' do
-     expect(items).to include([5, 1, [priority].pack('c')])
+     expect(items).to include([5, 1, [default_priority].pack('c')])
    end
+  end
+
+  describe 'when content available is set' do
+    let(:sound) { nil }
+    let(:alert) { nil }
+    let(:content_available) { 1 }
+
+    it 'should have the correct priority' do
+      expect(instance.priority).to eq(5)
+    end
   end
 end
