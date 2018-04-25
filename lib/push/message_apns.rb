@@ -71,7 +71,6 @@ module Push
 
     def priority
       if properties[:alert].nil? &&
-         properties[:badge].nil? &&
          properties[:sound].nil? &&
          properties[:content_available].present?
         APNS_PRIORITY_CONSERVE_POWER
